@@ -73,7 +73,7 @@ def goal_action(prompt):
 def task_input(prompt, snapshot):
     rules = snapshot["policy"].get("worker_instructions", [])
     rules = [*rules, *(entry["rule"] for entry in snapshot["worker_experience"])]
-    context = "本次执行约定（本次任务中的明确要求优先）：\n" + "\n".join("- " + rule for rule in rules)
+    context = "Execution rules for this task (explicit task instructions take precedence):\n" + "\n".join("- " + rule for rule in rules)
     action = goal_action(prompt)
     if action in {"status", "clear"}:
         return prompt.strip()
@@ -83,7 +83,7 @@ def task_input(prompt, snapshot):
         if len(value.removeprefix("/goal ")) > 4000:
             raise ValueError("/goal condition plus guidance exceeds 4000 characters; put task details in a file and reference its path")
         return value
-    return context + "\n\n本次任务：\n" + prompt
+    return context + "\n\nTask:\n" + prompt
 
 
 def task_runtime(prompt, snapshot):

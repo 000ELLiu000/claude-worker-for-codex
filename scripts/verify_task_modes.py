@@ -28,7 +28,7 @@ def check(name, condition):
     assert condition, name
 
 normal = workerctl.task_input("Do the task.", snapshot)
-check("ordinary tasks retain the guidance prefix", normal.startswith("本次执行约定") and normal.endswith("Do the task."))
+check("ordinary tasks retain the guidance prefix", normal.startswith("Execution rules for this task") and normal.endswith("Do the task."))
 goal = workerctl.task_input("  /goal proof.txt passes its check", snapshot)
 check("goal command stays first when enabled framing is computed", goal.startswith("/goal proof.txt"))
 check("goal retains current task guidance", "Return evidence." in goal)

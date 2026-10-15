@@ -1,36 +1,40 @@
-# 一次派活的交付约定
+# A complete brief for a single handoff
 
-主 agent 在第一次派活时填写以下内容。优先给确定的事实与现成检查入口，避免让 worker 重建工具链。正文控制在必要信息内。
+The main agent fills this out before the first submission. Provide established facts and existing checks so the worker can start without rebuilding the toolchain. Keep the brief focused on what the task needs.
 
-- **目标与读者**：最终要解决什么，读者能理解到什么程度。
-- **交付**：具体文件路径、格式、允许修改的范围。
-- **必须正确的事实**：列出本任务的事实及来源；必要源码给精确片段/位置，补充资料按需读。
-- **验收条件**：列出内容、功能、视觉要求和失败条件，第一次就完整交代。
-- **检查入口**：已有命令、环境、截图/日志目录；worker 使用同一入口，不另外开发验收工具。
-- **预算**：按任务给墙钟时间与宽裕的回合上限，给自检和最终报告留余量。
-- **核验级别**：探索调研 / agent as judge / 前端 / 代码；列出本任务必须检查的项目，不统一加重。
-- **工作流**：单任务 / 独立并行 / 串行依赖 / 独立评委投票 / 混合；明确输入输出和依赖。
-- **子代理**：本任务不使用，或明确允许的职责、数量、模型、深度和总预算。
+- **Goal and audience:** What should the deliverable achieve, and what should its audience understand?
+- **Deliverables:** Exact output paths, formats, and the permitted scope of changes.
+- **Required facts:** Relevant facts and sources. Point to precise code locations or excerpts when needed; read supporting material on demand.
+- **Acceptance criteria:** Content, behavior, visual requirements, and failure conditions. Include them all in the initial brief.
+- **Check entry points:** Existing commands, environment details, and screenshot or log locations. The worker uses these checks rather than inventing another verification toolchain.
+- **Budget:** A wall-clock limit and a generous turn limit, with room for self-checks, repairs, and a final report.
+- **Verification level:** Exploration, agent-as-judge, frontend, or code. Specify the checks this task actually needs.
+- **Workflow:** Single worker, independent parallel tasks, sequential dependencies, independent judges, or a mixture. Define inputs, outputs, and dependencies.
+- **Subagents:** Either prohibit them for this task or explicitly define permitted roles, count, models, maximum depth, and shared budget.
 
-worker 在一个 job 内完成：实现 → 按任务运行检查 → 查看实际产物 → 批量修复发现的问题 → 简短交付。自修在任务预算内进行；同一阻碍重复出现或继续修复增益不明显时，返回具体阻碍、现有产物和证据，主 agent 决定下一步。
+Within one job, the worker should implement, run the required checks, inspect the actual outputs, fix issues together, and return a short handoff. Self-repair stays within the task budget. If the same obstacle repeats or further attempts offer little benefit, report the blocker, current artifacts, and evidence so the main agent can decide what to do next.
 
-## 有验收标准时可选使用 goal
+## Use goal for verifiable acceptance criteria
 
-原生 Claude Code 支持非交互 `/goal`。在 `worker_submit` 的 prompt 开头使用真正的命令，例如：
+Native Claude Code supports non-interactive `/goal`. Start the `worker_submit` prompt with the actual command, for example:
 
 ```text
-/goal 根据 task.md 完成交付；指定测试实际退出 0，未修改允许范围外的文件，并提供检查结果；在本次任务预算内达标后结束。
+/goal Complete the deliverables described in task.md. The specified checks actually exit with code 0, all changes stay within the assigned scope, and the final response includes verification results. Finish within this job's budget.
 ```
 
-控制器保留 slash command 在输入首位。普通任务保留原调用方式，不受影响。goal 是一个目标循环：命令生效不等于目标达成，主 agent 仍按任务强度独立验收；不能把进程正常退出当作目标达标。目标与注入约定合计需控制在原生条件的 4000 字符内，复杂任务详情放文件。
+The controller preserves the slash command at the start of the input. Ordinary prompts continue to work normally. A goal loop checks completion; issuing the command does not establish that the goal was met. The main agent still reviews the deliverables at the appropriate level. A successful process exit alone is not proof of acceptance.
 
-## 不同工作流的交接
+The goal condition plus injected rules must fit within the native 4,000-character limit. Put detailed requirements in a file and reference its path.
 
-- 独立调研：分切片、并行搜索，各自交来源与短结论，主 agent 轻量汇总。
-- 串行任务：worker A 交付 a，经最低可用检查后把文件与必要事实传给 worker B 执行 b，避免让 B 重做 A。
-- 多评委投票：同一评测标准、独立评分并返回理由；汇总票数和分歧，主 agent 认真抽检，不把多数票等同正确答案。
-- worker 自带子代理：允许时为它开放 `Task` 等需要的工具（可用 `tools=default`）；worker 负责拆分、收齐并核对结果。共享总预算，层级和数量由任务明确。
+## Handoffs between workflows
 
-普通 HTML 讲解页：优先自包含 HTML/CSS/SVG，桌面完整、窄屏竖向。只有任务确实需要或用户指定时才引入额外绘图工具链；如需自动化检查，使用项目自带脚本并在机器通过后人工查看截图确认。
+- **Independent research:** Split the topic into independent slices and search in parallel. Each worker returns sources and short conclusions; the main agent performs a lightweight check and synthesis.
+- **Sequential tasks:** Worker A delivers its output. After checking that it is usable, pass the output file and necessary facts to worker B. Avoid making B repeat A's work.
+- **Independent judges:** Give each judge the same rubric and request an independent decision with reasons. Aggregate votes and disagreements, then carefully spot-check the evidence. A majority vote does not establish correctness.
+- **Worker-owned subagents:** When explicitly permitted, expose the required tools with `tools=default`, or an appropriate tool list for the installed CLI. The worker decomposes the task, collects results, and checks them before handing off. All subagents share the task's budget; the brief defines their count, roles, models, and depth.
 
-worker 最后只返回：产物路径、已执行检查及证据、未解决问题。主 agent 做一次与任务相称的独立验收；确需返工时，一次给齐全部问题，保持标准，不逐个提醒。任务结束后照常关闭复盘。
+For an ordinary HTML explainer, prefer self-contained HTML, CSS, and SVG, with a complete desktop layout and a readable vertical layout on narrow screens. Add a drawing toolchain only when the task requires it or the user requests it. Use existing project checks when available, then inspect screenshots to confirm the actual result.
+
+## Final handoff and review
+
+The worker returns only artifact paths, checks actually performed with evidence, and unresolved issues. The main agent performs an independent review proportional to the task. If revisions are needed, send all findings together while maintaining the acceptance standard. Close the job's review after inspecting the result.
