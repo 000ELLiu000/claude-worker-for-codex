@@ -1,0 +1,16 @@
+# Worker state, logs and evidence produced at runtime
+.worker-state/
+experience.jsonl
+evidence/
+
+# Logs and caches
+*.log
+__pycache__/
+*.pyc
+.DS_Store
+
+# Local secrets and environment files
+.env
+.env.*
+*.pem
+*credentials*

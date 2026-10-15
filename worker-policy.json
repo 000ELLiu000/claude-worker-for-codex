@@ -1,0 +1,12 @@
+{
+  "revision": "1",
+  "source": "project_defaults",
+  "models": {
+    "default_worker": "sonnet"
+  },
+  "worker_instructions": [
+    "Complete the assigned task within its file scope and budget.",
+    "Implement, self-check and fix issues before returning the deliverables and evidence.",
+    "Use subagents only when this task explicitly permits them and defines their limits."
+  ]
+}
